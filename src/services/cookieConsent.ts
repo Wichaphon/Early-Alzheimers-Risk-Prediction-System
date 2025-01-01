@@ -12,34 +12,54 @@ export interface CookieConsent {
   functional_consent: boolean;
 }
 
+const DEFAULT_CONSENT: CookieConsent = {
+  analytics_consent: false,
+  marketing_consent: false,
+  functional_consent: true,
+};
+
 export async function saveCookieConsent(consent: CookieConsent) {
-  const sessionId = localStorage.getItem('sessionId') || uuidv4();
-  localStorage.setItem('sessionId', sessionId);
+  try {
+    const sessionId = localStorage.getItem('sessionId') || uuidv4();
+    localStorage.setItem('sessionId', sessionId);
 
-  const { data, error } = await supabase
-    .from('cookie_consents')
-    .upsert({
-      session_id: sessionId,
-      ...consent,
-      updated_at: new Date().toISOString(),
-    }, {
-      onConflict: 'session_id'
-    });
+    const { error } = await supabase
+      .from('cookie_consents')
+      .upsert({
+        session_id: sessionId,
+        ...consent,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'session_id'
+      });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return consent;
+  } catch (error) {
+    console.error('Error saving cookie consent:', error);
+    return DEFAULT_CONSENT;
+  }
 }
 
-export async function getCookieConsent() {
-  const sessionId = localStorage.getItem('sessionId');
-  if (!sessionId) return null;
+export async function getCookieConsent(): Promise<CookieConsent | null> {
+  try {
+    const sessionId = localStorage.getItem('sessionId');
+    if (!sessionId) return null;
 
-  const { data, error } = await supabase
-    .from('cookie_consents')
-    .select('*')
-    .eq('session_id', sessionId)
-    .single();
+    const { data, error } = await supabase
+      .from('cookie_consents')
+      .select('analytics_consent, marketing_consent, functional_consent')
+      .eq('session_id', sessionId)
+      .single();
 
-  if (error) return null;
-  return data;
+    if (error && error.code === 'PGRST116') {
+      return null;
+    }
+
+    if (error) throw error;
+    return data || null;
+  } catch (error) {
+    console.error('Error getting cookie consent:', error);
+    return null;
+  }
 }

@@ -1,12 +1,7 @@
-export interface PredictionData {
-  age: number;
-  gender: string;
-  education: number;
-  mmse: number;
-  cdr: number;
-  etiv: number;
-  nwbv: number;
-  asf: number;
+import type { PatientData } from './patient';
+
+export interface PredictionData extends PatientData {
+  // ... other fields will be added as needed
 }
 
 export interface PredictionResult {

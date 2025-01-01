@@ -39,11 +39,16 @@ export function Header() {
     }`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div 
-          className="flex items-center space-x-2 cursor-pointer"
+          className="flex items-center space-x-2 cursor-pointer group"
           onClick={handleLogoClick}
         >
-          <Brain className="w-8 h-8 text-purple-600" />
-          <span className="text-xl font-semibold text-gray-900 dark:text-white">EarlyAlzRisk</span>
+          <div className="relative">
+            <Brain className="w-8 h-8 text-purple-600 transition-transform duration-300 transform group-hover:scale-110" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-200 rounded-full animate-pulse" />
+          </div>
+          <span className="text-xl font-semibold text-gray-900 dark:text-white">
+            EarlyAlzRisk
+          </span>
         </div>
         
         <NavLinks onFeaturesClick={handleFeaturesClick} />
