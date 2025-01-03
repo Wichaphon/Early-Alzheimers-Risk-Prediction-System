@@ -1,41 +1,81 @@
 import { useState } from 'react';
 import { PatientInfo } from './PatientInfo';
-import { ClinicalScores } from './ClinicalScores';
-import { BrainMeasurements } from './BrainMeasurements';
+import { LifestyleInfo } from './LifestyleInfo';
+import { MedicalHistory } from './MedicalHistory';
+import { VitalSigns } from './VitalSigns';
+import { ExtendedLipidPanel } from './ExtendedLipidPanel';
+import { CognitiveAssessment } from './CognitiveAssessment';
 import { ResultsModal } from './ResultsModal';
+import { FormProgress } from './FormProgress';
 import type { PredictionData, PredictionResult } from '../../types/prediction';
-import { submitPrediction } from '../../services/api';
 import { motion } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Brain } from 'lucide-react';
+import { Brain, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export function AssessmentForm() {
-  const [step, setStep] = useState(1);
+  const [activeSection, setActiveSection] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [formData, setFormData] = useState<PredictionData>({
     age: 0,
     gender: '',
-    education: 0,
-    mmse: 0,
-    cdr: 0,
-    etiv: 0,
-    nwbv: 0,
-    asf: 0
+    ethnicity: '',
+    educationLevel: 0,
+    bmi: 0,
+    smoking: false,
+    alcoholConsumption: '',
+    physicalActivity: 0,
+    dietQuality: 5,
+    sleepQuality: 5,
+    familyHistoryAlzheimers: false,
+    cardiovascularDisease: false,
+    diabetes: false,
+    depression: false,
+    headInjury: false,
+    hypertension: false,
+    systolicBP: 120,
+    diastolicBP: 80,
+    cholesterolTotal: 200,
+    cholesterolLDL: 100,
+    cholesterolHDL: 0,
+    triglycerides: 0,
+    mmseScore: 0,
+    functionalAssessment: '',
+    memoryComplaints: false,
+    behavioralProblems: false,
+    adlScore: 0,
+    confusion: false,
+    disorientation: false,
+    personalityChanges: false,
+    difficultyCompletingTasks: false,
+    forgetfulness: false
   });
+
+  const sections = [
+    { title: 'Personal Information', component: PatientInfo },
+    { title: 'Lifestyle Factors', component: LifestyleInfo },
+    { title: 'Medical History', component: MedicalHistory },
+    { title: 'Vital Signs', component: VitalSigns },
+    { title: 'Extended Lipid Panel', component: ExtendedLipidPanel },
+    { title: 'Cognitive Assessment', component: CognitiveAssessment }
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (step < 3) {
-      setStep(step + 1);
+    if (activeSection < sections.length - 1) {
+      setActiveSection(prev => prev + 1);
       return;
     }
+
     setError(null);
     setLoading(true);
 
     try {
-      const result = await submitPrediction(formData);
-      setResult(result);
+      // Implement your submission logic here
+      setResult({
+        probability: 0.5,
+        risk_level: 'moderate'
+      });
     } catch (err) {
       setError('Failed to process assessment. Please try again.');
     } finally {
@@ -47,108 +87,98 @@ export function AssessmentForm() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'gender' ? value : Number(value)
+      [name]: ['smoking', 'familyHistoryAlzheimers', 'cardiovascularDisease', 'diabetes', 
+               'depression', 'headInjury', 'hypertension', 'memoryComplaints', 
+               'behavioralProblems', 'confusion', 'disorientation', 'personalityChanges',
+               'difficultyCompletingTasks', 'forgetfulness'].includes(name) ? 
+              value === 'true' : 
+              ['age', 'educationLevel', 'bmi', 'physicalActivity', 'dietQuality', 
+               'sleepQuality', 'systolicBP', 'diastolicBP', 'cholesterolTotal', 
+               'cholesterolLDL', 'cholesterolHDL', 'triglycerides', 'mmseScore',
+               'adlScore'].includes(name) ? 
+              Number(value) : value
     }));
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <PatientInfo formData={formData} onChange={handleChange} />;
-      case 2:
-        return <ClinicalScores formData={formData} onChange={handleChange} />;
-      case 3:
-        return <BrainMeasurements formData={formData} onChange={handleChange} />;
-      default:
-        return null;
-    }
-  };
+  const CurrentSection = sections[activeSection].component;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-3xl mx-auto"
+      className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-800/25 overflow-hidden border border-gray-200 dark:border-gray-700">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between items-center">
-            {[1, 2, 3].map((stepNumber) => (
-              <div
-                key={stepNumber}
-                className="flex items-center"
-                style={{ flex: stepNumber < 3 ? 1 : 'none' }}
-              >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                    step >= stepNumber
-                      ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900'
-                      : 'border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  {stepNumber}
-                </div>
-                {stepNumber < 3 && (
-                  <div
-                    className={`flex-1 h-0.5 mx-2 transition-colors ${
-                      step > stepNumber ? 'bg-gray-900 dark:bg-white' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+        <div className="p-6 sm:p-8">
+          <FormProgress 
+            steps={sections.map(s => s.title)} 
+            currentStep={activeSection} 
+            onStepClick={setActiveSection}
+          />
 
-        <form onSubmit={handleSubmit} className="p-6">
-          {renderStep()}
-          
-          <div className="flex justify-between mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
-            {step > 1 && (
+          <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+            <motion.div
+              key={activeSection}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {sections[activeSection].title}
+              </h3>
+              
+              <CurrentSection formData={formData} onChange={handleChange} />
+            </motion.div>
+
+            {error && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+              {activeSection > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => setActiveSection(prev => prev - 1)}
+                  className="inline-flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </motion.button>
+              )}
+
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={() => setStep(step - 1)}
-                className="inline-flex items-center px-6 py-3 text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors"
+                type="submit"
+                disabled={loading}
+                className={`ml-auto inline-flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
+                  loading
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                    : 'bg-purple-600 text-white hover:bg-purple-700'
+                }`}
               >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Previous
+                {loading ? (
+                  'Processing...'
+                ) : activeSection < sections.length - 1 ? (
+                  <>
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                ) : (
+                  <>
+                    Generate Assessment
+                    <Brain className="w-5 h-5 ml-2" />
+                  </>
+                )}
               </motion.button>
-            )}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={loading}
-              className={`ml-auto inline-flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
-                loading
-                  ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-900 dark:bg-white hover:bg-black dark:hover:bg-gray-100 text-white dark:text-gray-900 shadow-lg hover:shadow-xl'
-              }`}
-            >
-              {loading ? (
-                'Processing...'
-              ) : step < 3 ? (
-                <>
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              ) : (
-                <>
-                  Generate Assessment
-                  <Brain className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </motion.button>
-          </div>
-
-          {error && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg border border-red-200 dark:border-red-900/30">
-              {error}
             </div>
-          )}
-        </form>
+          </form>
+        </div>
       </div>
 
       {result && <ResultsModal result={result} onClose={() => setResult(null)} />}
