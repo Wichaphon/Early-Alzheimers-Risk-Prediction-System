@@ -1,18 +1,11 @@
 import { useState } from 'react';
-import { PatientInfo } from './PatientInfo';
-import { LifestyleInfo } from './LifestyleInfo';
-import { MedicalHistory } from './MedicalHistory';
-import { VitalSigns } from './VitalSigns';
-import { ExtendedLipidPanel } from './ExtendedLipidPanel';
-import { CognitiveAssessment } from './CognitiveAssessment';
-import { ResultsModal } from './ResultsModal';
-import { FormProgress } from './FormProgress';
-import type { PredictionData, PredictionResult } from '../../types/prediction';
 import { motion } from 'framer-motion';
-import { Brain, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Brain } from 'lucide-react';
+import { FormSection } from './FormSection';
+import { ResultsModal } from './ResultsModal';
+import type { PredictionData, PredictionResult } from '../../types/prediction';
 
 export function AssessmentForm() {
-  const [activeSection, setActiveSection] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PredictionResult | null>(null);
@@ -51,27 +44,13 @@ export function AssessmentForm() {
     forgetfulness: false
   });
 
-  const sections = [
-    { title: 'Personal Information', component: PatientInfo },
-    { title: 'Lifestyle Factors', component: LifestyleInfo },
-    { title: 'Medical History', component: MedicalHistory },
-    { title: 'Vital Signs', component: VitalSigns },
-    { title: 'Extended Lipid Panel', component: ExtendedLipidPanel },
-    { title: 'Cognitive Assessment', component: CognitiveAssessment }
-  ];
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeSection < sections.length - 1) {
-      setActiveSection(prev => prev + 1);
-      return;
-    }
-
     setError(null);
     setLoading(true);
 
     try {
-      // Implement your submission logic here
+      // Implement submission logic here
       setResult({
         probability: 0.5,
         risk_level: 'moderate'
@@ -100,86 +79,121 @@ export function AssessmentForm() {
     }));
   };
 
-  const CurrentSection = sections[activeSection].component;
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
+      className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
     >
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div className="p-6 sm:p-8">
-          <FormProgress 
-            steps={sections.map(s => s.title)} 
-            currentStep={activeSection} 
-            onStepClick={setActiveSection}
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <FormSection
+            title="Personal Information"
+            icon="User"
+            formData={formData}
+            onChange={handleChange}
+            fields={['age', 'gender', 'ethnicity', 'educationLevel', 'bmi']}
           />
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-8">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {sections[activeSection].title}
-              </h3>
-              
-              <CurrentSection formData={formData} onChange={handleChange} />
-            </motion.div>
+          <FormSection
+            title="Lifestyle Factors"
+            icon="Heart"
+            formData={formData}
+            onChange={handleChange}
+            fields={['smoking', 'alcoholConsumption', 'physicalActivity', 'dietQuality', 'sleepQuality']}
+          />
 
-            {error && (
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
-                {error}
-              </div>
-            )}
+          <FormSection
+            title="Medical History"
+            icon="Stethoscope"
+            formData={formData}
+            onChange={handleChange}
+            fields={[
+              'familyHistoryAlzheimers',
+              'cardiovascularDisease',
+              'diabetes',
+              'depression',
+              'headInjury'
+            ]}
+          />
 
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-              {activeSection > 0 && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="button"
-                  onClick={() => setActiveSection(prev => prev - 1)}
-                  className="inline-flex items-center px-6 py-3 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Previous
-                </motion.button>
-              )}
+          <FormSection
+            title="Vital Signs"
+            icon="Activity"
+            formData={formData}
+            onChange={handleChange}
+            fields={[
+              'hypertension',
+              'systolicBP',
+              'diastolicBP',
+              'cholesterolTotal',
+              'cholesterolLDL'
+            ]}
+          />
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={loading}
-                className={`ml-auto inline-flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
-                  loading
-                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-purple-600 text-white hover:bg-purple-700'
-                }`}
-              >
-                {loading ? (
-                  'Processing...'
-                ) : activeSection < sections.length - 1 ? (
-                  <>
-                    Next
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                ) : (
-                  <>
-                    Generate Assessment
-                    <Brain className="w-5 h-5 ml-2" />
-                  </>
-                )}
-              </motion.button>
-            </div>
-          </form>
+          <FormSection
+            title="Extended Lipid Panel"
+            icon="LineChart"
+            formData={formData}
+            onChange={handleChange}
+            fields={[
+              'cholesterolHDL',
+              'triglycerides',
+              'mmseScore',
+              'functionalAssessment'
+            ]}
+          />
+
+          <FormSection
+            title="Cognitive Assessment"
+            icon="Brain"
+            formData={formData}
+            onChange={handleChange}
+            fields={[
+              'memoryComplaints',
+              'behavioralProblems',
+              'adlScore',
+              'confusion',
+              'disorientation',
+              'personalityChanges',
+              'difficultyCompletingTasks',
+              'forgetfulness'
+            ]}
+          />
         </div>
-      </div>
+
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <div className="flex justify-center pt-8">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            type="submit"
+            disabled={loading}
+            className={`
+              inline-flex items-center px-8 py-4 rounded-xl font-medium text-lg
+              transition-all duration-200 shadow-lg
+              ${loading
+                ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700'
+              }
+            `}
+          >
+            {loading ? (
+              'Processing...'
+            ) : (
+              <>
+                Generate Assessment
+                <Brain className="w-6 h-6 ml-2" />
+              </>
+            )}
+          </motion.button>
+        </div>
+      </form>
 
       {result && <ResultsModal result={result} onClose={() => setResult(null)} />}
     </motion.div>

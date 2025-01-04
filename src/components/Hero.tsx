@@ -1,8 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Brain } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function Hero() {
+  const navigate = useNavigate();
+  
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800";
   };
@@ -44,7 +47,10 @@ export function Hero() {
               transition={{ delay: 0.6, duration: 0.8 }}
               className="mt-8 sm:max-w-lg sm:mx-auto sm:text-center lg:text-left"
             >
-              <button className="inline-flex items-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-white bg-purple-600 hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <button 
+                onClick={() => navigate('/predict')}
+                className="inline-flex items-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-white bg-purple-600 hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
                 Try Demo
               </button>
             </motion.div>
